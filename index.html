@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Struk Thermal 80mm</title>
+    <!-- Google Fonts for UI and Crisp Print Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Load modular stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header bar, only shown on screen -->
+    <header class="main-header no-print">
+        <div class="brand">
+            <span class="logo-title">Generator Struk Thermal 80mm</span>
+            <span class="badge">V2.0 PRO</span>
+        </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <div class="app-grid">
+        
+        <!-- Interactive Form Section -->
+        <div class="editor-card no-print">
+            <h2>
+                <span>Konfigurasi Struk</span>
+                <button class="btn btn-secondary btn-sm" onclick="resetForm()">
+                    Atur Ulang Data
+                </button>
+            </h2>
+
+            <!-- Struk Type Selector -->
+            <div class="form-group full-width" style="margin-bottom: 1rem;">
+                <label style="font-weight: 700; color: var(--primary-light);">PILIH TIPE STRUK</label>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.3rem;">
+                    <button class="btn btn-tab active" id="tab-belanja" onclick="switchReceiptType('belanja')">Struk Belanja</button>
+                    <button class="btn btn-tab" id="tab-spbu" onclick="switchReceiptType('spbu')">Struk SPBU</button>
+                </div>
+            </div>
+
+            <!-- Bluetooth Printer Section -->
+            <div class="form-section-title">Koneksi Bluetooth</div>
+            <div class="bluetooth-panel">
+                <div class="bluetooth-status-row">
+                    <div class="status-indicator">
+                        <span class="status-dot disconnected" id="bt-status-dot"></span>
+                        <span id="bt-status-text">Bluetooth terputus</span>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" id="btn-disconnect-bt" onclick="disconnectBluetooth()" style="display: none; padding: 0.2rem 0.5rem; font-size: 0.7rem;">
+                        Putus
+                    </button>
+                </div>
+                <div class="bluetooth-actions">
+                    <button class="btn btn-secondary btn-sm btn-bluetooth" id="btn-connect-bt" onclick="connectBluetooth()" style="width: 100%;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline></svg>
+                        Hubungkan Printer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Print Settings -->
+            <div class="form-section-title">Setelan Cetak</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="input-font-weight">Ketebalan Teks Printer</label>
+                    <select id="input-font-weight" onchange="adjustFontSettings()">
+                        <option value="normal">Normal</option>
+                        <option value="bold" selected>Lebih Tebal (Bolder)</option>
+                        <option value="extra-bold">Sangat Tebal (Extra Bold)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-font-size">Ukuran Huruf</label>
+                    <select id="input-font-size" onchange="adjustFontSettings()">
+                        <option value="8px">Kecil (8px)</option>
+                        <option value="9px">Sedang-Kecil (9px)</option>
+                        <option value="10px">Normal (10px)</option>
+                        <option value="11px" selected>Sedang-Besar (11px)</option>
+                        <option value="12px">Besar (12px)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-font-family">Gaya Font / Jenis Huruf</label>
+                    <select id="input-font-family" onchange="adjustFontSettings()">
+                        <option value="mono" selected>Monospace (JetBrains Mono / Courier)</option>
+                        <option value="serif">Serif (Times New Roman / Georgia)</option>
+                        <option value="sans">Sans-Serif (Plus Jakarta Sans / Arial)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-logo-type">Gaya Logo / Header</label>
+                    <select id="input-logo-type" onchange="toggleLogoType()">
+                        <option value="text" selected>Nama Toko (Teks - Lebih Tajam)</option>
+                        <option value="image">Gambar Kustom (Unggah Logo)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-print-width">Lebar Area Cetak (Print Width)</label>
+                    <select id="input-print-width" onchange="adjustFontSettings()">
+                        <option value="80mm">Full 80mm (Tanpa Batas)</option>
+                        <option value="76mm">Lebar 76mm</option>
+                        <option value="72mm" selected>Lebar 72mm (Rekomendasi POS-80)</option>
+                        <option value="68mm">Lebar 68mm</option>
+                        <option value="64mm">Lebar 64mm</option>
+                        <option value="60mm">Lebar 60mm</option>
+                    </select>
+                </div>
+                
+                <div class="form-group full-width" id="logo-file-container" style="display: none;">
+                    <label>Unggah Gambar Logo Toko</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="input-logo-file" accept="image/*" onchange="handleLogoUpload(this)">
+                        <div class="file-upload-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                            <span>Pilih Gambar Logo</span>
+                        </div>
+                        <div class="file-name-display" id="file-name-display">Belum ada file dipilih</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Align & Separator -->
+            <div class="form-section-subtitle" style="margin-top:1.5rem">Align & Separator</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="input-align-header">Rata Header (Judul Toko)</label>
+                    <select id="input-align-header" oninput="updatePreview()">
+                        <option value="left">Kiri</option>
+                        <option value="center" selected>Tengah</option>
+                        <option value="right">Kanan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-sep-header">Pemisah Header → Customer</label>
+                    <input type="text" id="input-sep-header" value="-" placeholder="Kosongi jika tidak ada" oninput="updatePreview()" maxlength="1" style="text-align:center; font-family: monospace;">
+                </div>
+                <div class="form-group">
+                    <label for="input-align-customer">Rata Customer</label>
+                    <select id="input-align-customer" oninput="updatePreview()">
+                        <option value="left" selected>Kiri</option>
+                        <option value="center">Tengah</option>
+                        <option value="right">Kanan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-sep-customer">Pemisah Customer → Barang</label>
+                    <input type="text" id="input-sep-customer" value="-" placeholder="Kosongi jika tidak ada" oninput="updatePreview()" maxlength="1" style="text-align:center; font-family: monospace;">
+                </div>
+                <div class="form-group">
+                    <label for="input-align-items">Rata Barang</label>
+                    <select id="input-align-items" oninput="updatePreview()">
+                        <option value="left" selected>Kiri</option>
+                        <option value="center">Tengah</option>
+                        <option value="right">Kanan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-sep-items">Pemisah Barang → Total</label>
+                    <input type="text" id="input-sep-items" value="-" placeholder="Kosongi jika tidak ada" oninput="updatePreview()" maxlength="1" style="text-align:center; font-family: monospace;">
+                </div>
+                <div class="form-group">
+                    <label for="input-align-totals">Rata Total</label>
+                    <select id="input-align-totals" oninput="updatePreview()">
+                        <option value="left" selected>Kiri</option>
+                        <option value="center">Tengah</option>
+                        <option value="right">Kanan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="input-sep-totals">Pemisah Total → Footer</label>
+                    <input type="text" id="input-sep-totals" value="-" placeholder="Kosongi jika tidak ada" oninput="updatePreview()" maxlength="1" style="text-align:center; font-family: monospace;">
+                </div>
+                <div class="form-group">
+                    <label for="input-align-footer">Rata Footer</label>
+                    <select id="input-align-footer" oninput="updatePreview()">
+                        <option value="left" selected>Kiri</option>
+                        <option value="center">Tengah</option>
+                        <option value="right">Kanan</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- FORMS: TYPE 1 - BELANJA -->
+            <div id="form-container-belanja">
+                <!-- 1. Shop Info & Header Config (DETAIL TOKO) -->
+                <div class="form-section-title">Detail Toko</div>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="input-store-name">Nama Merchant/Toko</label>
+                        <input type="text" id="input-store-name" value="" placeholder="Nama Toko Anda" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="input-store-address">Alamat Toko</label>
+                        <textarea id="input-store-address" placeholder="Alamat Lengkap Toko" oninput="updatePreview()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="input-store-phone">No. Telepon / HP</label>
+                        <input type="text" id="input-store-phone" value="" placeholder="Contoh: 0812-3456-7890" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-datetime">Tanggal & Waktu</label>
+                        <div class="input-row">
+                            <input type="datetime-local" id="input-datetime" step="1" value="" oninput="updatePreview()">
+                            <button class="btn btn-secondary btn-sm" onclick="setNow()" title="Set ke Waktu Sekarang">Sekarang</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="input-cashier">Nama Kasir</label>
+                        <input type="text" id="input-cashier" value="" placeholder="Nama Kasir" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-cashier-prefix">Prefix Kasir</label>
+                        <input type="text" id="input-cashier-prefix" value="Op." placeholder="Kosongi jika tidak perlu" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-receipt-no">Nomor Struk (Receipt No)</label>
+                        <div class="input-row">
+                            <input type="text" id="input-receipt-no" value="" placeholder="Generated otomatis" oninput="updatePreview()">
+                            <button class="btn btn-secondary btn-sm" onclick="randomizeReceiptNo()" title="Acak ID">Acak</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="input-label-receipt">Label No. Struk</label>
+                        <input type="text" id="input-label-receipt" value="No." placeholder="Kosongi jika tidak perlu" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-payment-type">Tipe Pembayaran</label>
+                        <input type="text" id="input-payment-type" value="Tunai" placeholder="Cash / QRIS / Debit" oninput="updatePreview()">
+                    </div>
+                </div>
+
+                <!-- 2. Customer Info (DETAIL PELANGGAN) -->
+                <div class="form-section-title">Detail Pelanggan</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="input-customer">Nama Pelanggan (Cust)</label>
+                        <input type="text" id="input-customer" value="" placeholder="Nama Pelanggan" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-customer-address">Alamat Pelanggan</label>
+                        <input type="text" id="input-customer-address" value="" placeholder="Alamat Pelanggan" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="input-customer-phone">No. Telepon Pelanggan</label>
+                        <input type="text" id="input-customer-phone" value="" placeholder="No. Telepon Pelanggan" oninput="updatePreview()">
+                    </div>
+                    <div class="form-section-subtitle">Label</div>
+                    <div class="form-group">
+                        <label for="input-label-cust">Label Customer</label>
+                        <input type="text" id="input-label-cust" value="" placeholder="Cust" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-label-address">Label Alamat</label>
+                        <input type="text" id="input-label-address" value="" placeholder="Alamat" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-label-phone">Label Telepon</label>
+                        <input type="text" id="input-label-phone" value="" placeholder="Telp" oninput="updatePreview()">
+                    </div>
+                </div>
+
+                <!-- 3. Items List (DAFTAR BARANG) -->
+                <div class="form-section-title">Daftar Barang Belanja</div>
+                <div class="items-editor-container" id="editor-items-list">
+                    <!-- Dynamic rows via JS -->
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="addItem()" style="width: 100%; justify-content: center; margin-bottom: 1.5rem;">
+                    + Tambah Barang Belanja
+                </button>
+
+                <!-- 4. Payment Details (PEMBAYARAN) -->
+                <div class="form-section-title">Pembayaran & Diskon</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="input-discount">Potongan Diskon (Rp)</label>
+                        <input type="number" id="input-discount" value="0" min="0" oninput="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-cash-paid">Uang Bayar Cash (Rp)</label>
+                        <input type="number" id="input-cash-paid" value="0" min="0" oninput="updatePreview()">
+                    </div>
+                </div>
+
+                <!-- 5. Footer Message (CATATAN KAKI) -->
+                <div class="form-section-title">Catatan Kaki (Footer)</div>
+                <div class="form-group full-width">
+                    <textarea id="input-footer-msg" oninput="updatePreview()">Terima Kasih Atas Kunjungan Anda
+Barang yang sudah dibeli
+tidak dapat ditukar/dikembalikan</textarea>
+                </div>
+
+            </div>
+
+            <!-- FORMS: TYPE 2 - SPBU -->
+            <div id="form-container-spbu" style="display: none;">
+                <div class="form-section-title">Detail SPBU</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="input-spbu-code">Kode SPBU</label>
+                        <input type="text" id="input-spbu-code" value="5468108" oninput="updateSpbuPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-spbu-name">Nama SPBU</label>
+                        <input type="text" id="input-spbu-name" value="SPBU PANGLIMA SUDIRMAN149" oninput="updateSpbuPreview()">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="input-spbu-address">Alamat SPBU</label>
+                        <input type="text" id="input-spbu-address" value="JL. PANGLIMA SUDIRMAN NO.149" oninput="updateSpbuPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-spbu-shift">Shift</label>
+                        <input type="text" id="input-spbu-shift" value="2" oninput="updateSpbuPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-spbu-trans">No. Transaksi</label>
+                        <div class="input-row">
+                            <input type="text" id="input-spbu-trans" value="2346417" oninput="updateSpbuPreview()">
+                            <button class="btn btn-secondary btn-sm" onclick="randomizeSpbuReceipt()" title="Acak ID">Acak</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="input-spbu-date">Tanggal</label>
+                        <input type="date" id="input-spbu-date" value="2026-06-15" oninput="updateSpbuPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-spbu-time">Jam</label>
+                        <div class="input-row">
+                            <input type="text" id="input-spbu-time" value="14:34:50" placeholder="HH:MM:SS" oninput="updateSpbuPreview()">
+                            <button class="btn btn-secondary btn-sm" onclick="setSpbuNow()" title="Set ke Waktu Sekarang">Sekarang</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section-title">Detail Pengisian</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="input-spbu-pump">Pulau/Pompa</label>
+                        <input type="text" id="input-spbu-pump" value="14" oninput="updateSpbuPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-spbu-grade">Nama Produk (Grade)</label>
+                        <input type="text" id="input-spbu-grade" value="PERTAMAX_TURBO" oninput="updateSpbuPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-spbu-price">Harga per Liter (Rp)</label>
+                        <input type="number" id="input-spbu-price" value="20750" oninput="updateSpbuPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-spbu-volume">Volume (Liter)</label>
+                        <input type="number" id="input-spbu-volume" value="2.31" step="0.01" oninput="updateSpbuPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-spbu-operator">Operator</label>
+                        <input type="text" id="input-spbu-operator" value="BAMBANG F" oninput="updateSpbuPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-spbu-cash">CASH (Uang Bayar)</label>
+                        <input type="number" id="input-spbu-cash" value="200000" oninput="updateSpbuPreview()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Preview Area -->
+        <div class="preview-column">
+            <div class="preview-title no-print">Pratinjau Struk (Kertas 80mm)</div>
+            
+            <div class="paper-receipt-container">
+                <div class="receipt-paper" id="receipt-paper">
+                    
+                    <!-- PREVIEW LAYOUT 1: BELANJA -->
+                    <div id="preview-layout-belanja" class="mono-text">
+                        <!-- SECTION: HEADER -->
+                        <div id="prev-section-header" class="receipt-section-block" style="text-align: center;">
+                            <div id="prev-logo-img" style="display: none; margin-bottom: 6px;">
+                                <img id="receipt-logo" class="receipt-logo-img" src="" alt="logo" style="display: none; margin: 0 auto;">
+                            </div>
+                            <div id="prev-logo-text" class="receipt-logo-text bold" style="margin-bottom: 2px;"></div>
+                            <div class="receipt-store-address" id="prev-store-address" style="color: #000;"></div>
+                            <div class="receipt-store-phone" id="prev-store-phone" style="color: #000;"></div>
+                            
+                            <!-- Metadata Rows -->
+                            <div class="receipt-row" style="margin: 1px 0; font-size: 0.95em;">
+                                <span id="prev-receipt-no" class="key">No.JL0000182083</span>
+                                <span id="prev-payment-type" class="val">Tunai</span>
+                            </div>
+                            <div class="receipt-row" style="margin: 1px 0; font-size: 0.95em;">
+                                <span id="prev-datetime" class="key">18/06/2026 09:02:12</span>
+                                <span id="prev-cashier" class="val">Op.KASIR</span>
+                            </div>
+                        </div>
+
+                        <!-- DIVIDER 1: Header → Customer -->
+                        <div id="prev-divider-1" class="receipt-divider-custom" style="display: none; font-family: monospace; text-align: center; font-size: 1em; letter-spacing: 0; line-height: 1; margin: 4px 0;"></div>
+
+                        <!-- SECTION: CUSTOMER -->
+                        <div id="prev-section-customer" class="receipt-section-block" style="text-align: left; font-size: 0.95em; line-height: 1.3;">
+                            <div id="prev-row-cust" class="receipt-row" style="margin: 0; justify-content: flex-start; gap: 0;">
+                                <span class="key" style="display: flex; width: 100%;">
+                                    <span id="prev-label-cust" class="label-text" style="display: inline-block; width: 18mm; color: #000;"></span>
+                                    <span id="prev-colon-cust" class="colon" style="color: #000; margin-right: 6px;">:</span>
+                                    <span class="val" id="prev-customer-val" style="color: #000;"></span>
+                                </span>
+                            </div>
+                            <div id="prev-row-address" class="receipt-row" style="margin: 1px 0; justify-content: flex-start; gap: 0;">
+                                <span class="key" style="display: flex; width: 100%;">
+                                    <span id="prev-label-address" class="label-text" style="display: inline-block; width: 18mm; color: #000;"></span>
+                                    <span id="prev-colon-address" class="colon" style="color: #000; margin-right: 6px;">:</span>
+                                    <span class="val" id="prev-address-val" style="color: #000;"></span>
+                                </span>
+                            </div>
+                            <div id="prev-row-phone" class="receipt-row" style="margin: 1px 0; justify-content: flex-start; gap: 0;">
+                                <span class="key" style="display: flex; width: 100%;">
+                                    <span id="prev-label-phone" class="label-text" style="display: inline-block; width: 18mm; color: #000;"></span>
+                                    <span id="prev-colon-phone" class="colon" style="color: #000; margin-right: 6px;">:</span>
+                                    <span class="val" id="prev-phone-val" style="color: #000;"></span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- DIVIDER 2: Customer → Items -->
+                        <div id="prev-divider-2" class="receipt-divider-custom" style="display: none; font-family: monospace; text-align: center; font-size: 1em; letter-spacing: 0; line-height: 1; margin: 4px 0;"></div>
+
+                        <!-- SECTION: ITEMS -->
+                        <div id="prev-section-items" class="receipt-section-block">
+                            <div id="prev-items-list"></div>
+                            <!-- Summary Line -->
+                            <div id="prev-items-summary" style="text-align: right; font-size: 0.95em; padding-right: 0.2rem; font-weight: normal; margin: 2px 0;">
+                                10 Produk 24 Item
+                            </div>
+                        </div>
+
+                        <!-- DIVIDER 3: Items → Totals -->
+                        <div id="prev-divider-3" class="receipt-divider-custom" style="display: none; font-family: monospace; text-align: center; font-size: 1em; letter-spacing: 0; line-height: 1; margin: 4px 0;"></div>
+
+                        <!-- SECTION: TOTALS -->
+                        <div id="prev-section-totals" class="receipt-section-block" style="text-align: left; width: 100%; font-size: 1.15em; line-height: 1.35;">
+                            <div class="receipt-row" style="margin: 0; white-space: pre;">
+                                <span class="key" style="display: flex; align-items: center; color: #000;">
+                                    <span class="label-text" style="display: inline-block; width: 18mm;">Total</span>
+                                    <span class="colon">:</span>
+                                </span>
+                                <span class="val" style="color: #000;" id="prev-total-val">364.000</span>
+                            </div>
+                            <div class="receipt-row" style="margin: 1px 0; white-space: pre;">
+                                <span class="key" style="display: flex; align-items: center; color: #000;">
+                                    <span class="label-text" style="display: inline-block; width: 18mm;">Bayar</span>
+                                    <span class="colon">:</span>
+                                </span>
+                                <span class="val" style="color: #000;" id="prev-bayar-val">364.000</span>
+                            </div>
+                            <div class="receipt-row" style="margin: 1px 0; white-space: pre;">
+                                <span class="key" style="display: flex; align-items: center; color: #000;">
+                                    <span class="label-text" style="display: inline-block; width: 18mm;">Kembali</span>
+                                    <span class="colon">:</span>
+                                </span>
+                                <span class="val" style="color: #000;" id="prev-kembali-val">0</span>
+                            </div>
+                        </div>
+
+                        <!-- DIVIDER 4: Totals → Footer -->
+                        <div id="prev-divider-4" class="receipt-divider-custom" style="display: none; font-family: monospace; text-align: center; font-size: 1em; letter-spacing: 0; line-height: 1; margin: 4px 0;"></div>
+
+                        <!-- SECTION: FOOTER -->
+                        <div id="prev-section-footer" class="receipt-section-block" style="text-align: left;">
+                            <div class="receipt-footer-msg" id="prev-footer-msg"></div>
+                        </div>
+                    </div>
+
+                    <!-- PREVIEW LAYOUT 2: SPBU (Pertamina Layout) -->
+                    <div id="preview-layout-spbu" class="mono-text" style="display: none;">
+                        <div class="receipt-header">
+                            <!-- Pertamina Vector Logo Header -->
+                            <div class="pertamina-logo-container">
+                                <svg viewBox="0 0 173 40" fill="none" class="pertamina-logo-svg" xmlns="http://www.w3.org/2000/svg">
+                                    <g fill="currentColor">
+                                        <!-- Letters -->
+                                        <path d="M62.3716 16.8534H67.7764C69.2818 16.8534 70.4961 17.2203 71.4193 17.9541C72.3425 18.681 73.0007 19.6399 73.0007 20.8306C73.0007 21.6129 72.9844 23.1154 72.527 23.8215C72.0779 24.5207 71.3959 25.0434 70.481 25.3896C69.5661 25.7357 68.5719 25.9157 67.9232 25.9296L65.5958 25.9711V30.4882H62.3716V16.8534ZM65.5459 19.7617V23.2925L67.5191 23.2924C68.1096 23.2924 68.6128 23.1159 69.0287 22.7628C69.4528 22.4098 69.6649 21.9909 69.6649 21.5063C69.6649 20.9525 69.4279 20.5232 68.9538 20.2186C68.4797 19.914 67.9873 19.7615 67.114 19.7615L65.5459 19.7617Z"/>
+                                        <path d="M74.8516 16.8532H83.6129V19.5532H78.0564V22.0303H83.4479V24.9635H78.0564V27.4523H83.6129V30.4881H74.8516V16.8532Z"/>
+                                        <path d="M86.624 16.8532H92.2384C93.7084 16.8532 94.6289 17.215 95.4811 17.9332C96.3377 18.655 96.6327 19.7973 96.7683 20.8513C96.8633 21.5893 96.8088 22.3007 96.4133 23.0553C96.0253 23.8099 94.8549 24.6324 93.7674 24.8852L98.0522 30.4881H94.1679L90.1498 25.0616L89.7916 25.0616V30.4881H86.624V16.8532ZM89.814 19.5078V23.029H90.9571C92.6062 23.029 93.4307 22.2082 93.4307 20.9551C93.4307 19.5565 91.9268 19.5149 91.0019 19.5078H89.814Z"/>
+                                        <path d="M98.1914 16.8532H108.693V19.8057H105.113V30.4881H101.747V19.8057H98.1914V16.8532Z"/>
+                                        <path d="M112.642 16.8532H115.998L120.623 30.4881H117.226L116.344 28.0299H112.194L111.151 30.4881H107.981L112.642 16.8532ZM114.279 21.2393L112.77 25.4586H115.567L114.279 21.2393Z"/>
+                                        <path d="M123.938 16.8532H127.076L129.641 24.4229L132.433 16.8532H135.547L137.348 30.4881H134.261L133.348 22.7593L130.262 30.4879H128.991L126.084 22.6181L124.75 30.4879L121.893 30.4881L123.938 16.8532Z"/>
+                                        <path d="M139.446 16.8532H142.695V30.4881H139.446V16.8532Z"/>
+                                        <path d="M154.891 16.9279H157.854V30.4881H154.572L148.853 22.4116V30.4881H145.648V16.9279H148.709L154.891 25.32V16.9279Z"/>
+                                        <path d="M164.519 16.8532H167.875L172.5 30.4881H169.103L168.221 28.0299H164.071L163.029 30.4881H159.858L164.519 16.8532ZM166.156 21.2393L164.648 25.4586H167.444L166.156 21.2393Z"/>
+                                        <!-- Symbol -->
+                                        <path d="M0 40C0 40 10.8287 22.8309 12.5932 19.9846C14.3575 17.1378 15.8775 16.8705 20.7519 16.8705H31.4955C30.8621 17.4002 29.7788 18.5062 28.9683 19.806L18.0412 37.3312C16.9486 39.2895 14.6382 40 11.8657 40H0Z"/>
+                                        <path d="M42.7765 16.8705C37.9021 16.8705 36.3736 17.1378 34.5167 19.9845C32.6595 22.8308 27.6709 30.5006 27.6709 30.5006H40.1641C42.3453 30.5006 44.4683 29.5459 45.3824 27.9678L52.7637 16.8705H42.7765Z"/>
+                                        <path d="M37.6581 3.05176e-05C42.5324 3.05176e-05 44.0609 0.267307 45.9179 3.11405C47.7751 5.96032 52.7637 13.6302 52.7637 13.6302H40.2705C38.0893 13.6302 35.9662 12.6754 35.0521 11.0973L27.6709 3.05176e-05H37.6581Z"/>
+                                    </g>
+                                </svg>
+                            </div>
+                            
+                            <div id="prev-spbu-code">5468108</div>
+                            <div id="prev-spbu-name">SPBU PANGLIMA SUDIRMAN149</div>
+                            <div id="prev-spbu-address">JL. PANGLIMA SUDIRMAN NO.149</div>
+                            <div id="prev-spbu-shift-trans">Shift: 2      No. Trans: 2346417</div>
+                            <div id="prev-spbu-waktu">Waktu: 15/06/2026 14:34:50</div>
+                        </div>
+
+                        <div class="receipt-divider" style="margin: 4px 0;"></div>
+
+                        <!-- Monospaced Aligned details -->
+                        <div id="prev-spbu-aligned-details">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+
+                        <div class="receipt-divider" style="margin: 4px 0;"></div>
+
+                        <!-- CASH and CHANGE (Double Line, Left Key, Right Value) -->
+                        <div class="receipt-section" style="font-size: 0.95em; color: #000;">
+                            <div style="text-align: left;">CASH</div>
+                            <div style="text-align: right; width: 100%; font-weight: normal;" id="prev-spbu-cash">200.000</div>
+                            <div style="text-align: left; margin-top: 4px;">CHANGE</div>
+                            <div style="text-align: right; width: 100%; font-weight: normal;" id="prev-spbu-change">-152.067</div>
+                        </div>
+
+                        <div class="receipt-divider" style="margin: 4px 0 0 0;"></div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="no-print" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; width: 100%; flex-wrap: wrap;">
+                <button class="btn btn-secondary" style="padding: 0.8rem 1.5rem; font-size: 0.95rem; flex: 1; justify-content: center;" onclick="window.print()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                    Cetak Browser
+                </button>
+                <button class="btn btn-success" id="btn-print-bt-preview" style="padding: 0.8rem 1.5rem; font-size: 0.95rem; flex: 1.2; justify-content: center;" onclick="printBluetooth()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline></svg>
+                    Cetak Bluetooth
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="app-footer no-print">
+        <p>&copy; 2026. Dashboard Cetak Thermal 80mm.</p>
+    </footer>
+
+    <!-- Load external application script -->
+    <script src="app.js"></script>
+</body>
+</html>
