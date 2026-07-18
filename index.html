@@ -199,9 +199,10 @@
                         <input type="text" id="input-store-phone" value="" placeholder="Contoh: 0812-3456-7890" oninput="updatePreview()">
                     </div>
                     <div class="form-group">
-                        <label for="input-datetime">Tanggal & Waktu</label>
+                        <label for="input-date">Tanggal & Waktu</label>
                         <div class="input-row">
-                            <input type="datetime-local" id="input-datetime" step="1" value="" oninput="updatePreview()">
+                            <input type="date" id="input-date" value="" oninput="updatePreview()" style="flex:1">
+                            <input type="time" id="input-time" step="1" value="" oninput="updatePreview()" style="flex:1">
                             <button class="btn btn-secondary btn-sm" onclick="setNow()" title="Set ke Waktu Sekarang">Sekarang</button>
                         </div>
                     </div>

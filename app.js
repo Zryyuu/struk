@@ -269,7 +269,9 @@ function updatePreview() {
     const storePhone = document.getElementById('input-store-phone').value;
     const cashier = document.getElementById('input-cashier').value || "KASIR";
     const receiptNo = document.getElementById('input-receipt-no').value;
-    const datetimeVal = document.getElementById('input-datetime').value;
+    const dateVal = document.getElementById('input-date').value;
+    const timeVal = document.getElementById('input-time').value;
+    const datetimeVal = dateVal + (timeVal ? 'T' + timeVal : '');
     const discountVal = parseFloat(document.getElementById('input-discount').value) || 0;
     const cashPaidVal = parseFloat(document.getElementById('input-cash-paid').value) || 0;
     const footerMsg = document.getElementById('input-footer-msg').value;
@@ -399,9 +401,9 @@ function updatePreview() {
 // Set Datetime to local current time for Belanja
 function setNow() {
     const now = new Date();
-    const offset = now.getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(now - offset)).toISOString().slice(0, 16);
-    document.getElementById('input-datetime').value = localISOTime;
+    const pad = (n) => n.toString().padStart(2, '0');
+    document.getElementById('input-date').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    document.getElementById('input-time').value = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
     updatePreview();
 }
 
@@ -525,7 +527,8 @@ function resetForm() {
         document.getElementById('input-store-phone').value = defaults.storePhone;
         document.getElementById('input-cashier').value = defaults.cashier;
         document.getElementById('input-receipt-no').value = defaults.receiptNo;
-        document.getElementById('input-datetime').value = defaults.datetime;
+        document.getElementById('input-date').value = defaults.datetime.split('T')[0];
+        document.getElementById('input-time').value = defaults.datetime.split('T')[1];
         document.getElementById('input-discount').value = defaults.discount;
         document.getElementById('input-cash-paid').value = defaults.cashPaid;
         document.getElementById('input-footer-msg').value = defaults.footerMsg;
@@ -1076,7 +1079,9 @@ async function generateBelanjaEscPos() {
     const storePhone = document.getElementById('input-store-phone').value || "";
     const cashier = document.getElementById('input-cashier').value || "Kasir";
     const receiptNo = document.getElementById('input-receipt-no').value || "TRX-0000";
-    const datetimeVal = document.getElementById('input-datetime').value;
+    const dateVal = document.getElementById('input-date').value;
+    const timeVal = document.getElementById('input-time').value;
+    const datetimeVal = dateVal + (timeVal ? 'T' + timeVal : '');
     const discountVal = parseFloat(document.getElementById('input-discount').value) || 0;
     const cashPaidVal = parseFloat(document.getElementById('input-cash-paid').value) || 0;
     const footerMsg = document.getElementById('input-footer-msg').value || "";
@@ -1100,7 +1105,7 @@ async function generateBelanjaEscPos() {
     const labelAddress = document.getElementById('input-label-address').value;
     const labelPhone = document.getElementById('input-label-phone').value;
 
-    // Date formatting (DD/MM/YYYY HH:MM:SS)
+    // Date formatting
     let dateStr = '';
     if (datetimeVal) {
         const dt = new Date(datetimeVal);
@@ -1353,7 +1358,8 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('input-store-phone').value = defaults.storePhone;
     document.getElementById('input-cashier').value = defaults.cashier;
     document.getElementById('input-receipt-no').value = defaults.receiptNo;
-    document.getElementById('input-datetime').value = defaults.datetime;
+    document.getElementById('input-date').value = defaults.datetime.split('T')[0];
+    document.getElementById('input-time').value = defaults.datetime.split('T')[1];
     document.getElementById('input-discount').value = defaults.discount;
     document.getElementById('input-cash-paid').value = defaults.cashPaid;
     document.getElementById('input-footer-msg').value = defaults.footerMsg;
