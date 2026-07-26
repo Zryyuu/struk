@@ -1350,6 +1350,123 @@ async function generateSpbuEscPos() {
     return builder.getBytes();
 }
 
+// ==========================================
+// HISTORY / RIWAYAT FUNCTIONS
+// ==========================================
+const HISTORY_KEY = 'receipt_history_80mm';
+
+function collectFormState() {
+    const ids = [
+        'input-store-name','input-store-address','input-store-phone',
+        'input-cashier','input-cashier-prefix','input-receipt-no',
+        'input-date','input-time',
+        'input-discount','input-cash-paid','input-footer-msg',
+        'input-label-receipt','input-payment-type',
+        'input-label-cust','input-label-address','input-label-phone',
+        'input-customer','input-customer-address','input-customer-phone',
+        'input-align-header','input-sep-header',
+        'input-align-customer','input-sep-customer',
+        'input-align-items','input-sep-items',
+        'input-align-totals','input-sep-totals',
+        'input-align-footer',
+        'input-font-weight','input-font-size','input-font-family',
+        'input-logo-type','input-print-width'
+    ];
+    const state = {};
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) state[id] = el.value;
+    });
+    state.items = JSON.parse(JSON.stringify(items));
+    const logoImg = document.getElementById('receipt-logo');
+    state.logoData = (logoImg && logoImg.src && logoImg.src !== '') ? logoImg.src : '';
+    return state;
+}
+
+function applyFormState(state) {
+    if (!state) return;
+    Object.keys(state).forEach(key => {
+        if (key === 'items') return;
+        if (key === 'logoData') return;
+        const el = document.getElementById(key);
+        if (el) el.value = state[key];
+    });
+    if (state.items) {
+        items = JSON.parse(JSON.stringify(state.items));
+        renderEditorItems();
+    }
+    if (state.logoData) {
+        const img = document.getElementById('receipt-logo');
+        if (img) {
+            img.src = state.logoData;
+            img.style.display = 'block';
+            document.getElementById('file-name-display').innerText = 'Logo dari riwayat';
+        }
+    }
+    toggleLogoType();
+    adjustFontSettings();
+    updatePreview();
+}
+
+function saveHistory() {
+    const nameInput = document.getElementById('input-history-name');
+    const name = nameInput.value.trim();
+    if (!name) { nameInput.focus(); return; }
+    const state = collectFormState();
+    const entry = {
+        id: Date.now().toString(),
+        name: name,
+        date: new Date().toLocaleString('id-ID'),
+        state: state
+    };
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    history.unshift(entry);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    nameInput.value = '';
+    renderHistoryList();
+}
+
+function deleteHistory(id) {
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    history = history.filter(e => e.id !== id);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    renderHistoryList();
+}
+
+function useHistory(id) {
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    const entry = history.find(e => e.id === id);
+    if (entry) applyFormState(entry.state);
+}
+
+function renderHistoryList() {
+    const container = document.getElementById('history-list');
+    if (!container) return;
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if (history.length === 0) {
+        container.innerHTML = '<div class="history-empty">Belum ada riwayat tersimpan</div>';
+        return;
+    }
+    container.innerHTML = history.map(e => `
+        <div class="history-item">
+            <div class="history-item-info">
+                <div class="history-item-name">${escHtml(e.name)}</div>
+                <div class="history-item-date">${escHtml(e.date)}</div>
+            </div>
+            <div class="history-item-actions">
+                <button class="btn btn-primary btn-sm" onclick="useHistory('${e.id}')">Gunakan</button>
+                <button class="btn btn-secondary btn-sm" onclick="deleteHistory('${e.id}')">Hapus</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function escHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // Page load initialisation
 window.addEventListener('DOMContentLoaded', () => {
     // Load default values for Belanja (SAFA receipt)
@@ -1399,4 +1516,5 @@ window.addEventListener('DOMContentLoaded', () => {
     // Start with Belanja Mode by default
     switchReceiptType('belanja');
     updatePreview();
+    renderHistoryList();
 });
