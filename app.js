@@ -4,6 +4,32 @@ let items = [];
 // Active Receipt Type: 'belanja' or 'spbu'
 let activeType = 'belanja';
 
+// ==========================================
+// SUPABASE CONFIGURATION
+// ==========================================
+// Isi dengan kredensial project Supabase Anda.
+// Dapatkan di: Supabase Dashboard -> Project Settings -> API
+const SUPABASE_URL = 'https://pkcroofxohjabaidcbqa.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_xqtWe1UqqiFRnpygl-X08w_R9RrhMXN';
+const TEMPLATES_TABLE = 'receipt_templates';
+
+let sbClient = null;
+let currentUser = null;
+let authMode = 'login';
+
+function initSupabase() {
+    if (!window.supabase) {
+        console.warn('Library Supabase tidak ditemukan.');
+        return false;
+    }
+    if (SUPABASE_URL.indexOf('GANTI_') === 0 || SUPABASE_ANON_KEY.indexOf('GANTI_') === 0) {
+        console.warn('Supabase belum dikonfigurasi. Isi SUPABASE_URL dan SUPABASE_ANON_KEY di app.js.');
+        return false;
+    }
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return true;
+}
+
 // Default values to restore
 const defaults = {
     storeName: "FOTO COPY SAFA",
@@ -1351,9 +1377,119 @@ async function generateSpbuEscPos() {
 }
 
 // ==========================================
-// HISTORY / RIWAYAT FUNCTIONS
+// AUTHENTICATION (SUPABASE)
 // ==========================================
-const HISTORY_KEY = 'receipt_history_80mm';
+function openAuthModal() {
+    document.getElementById('auth-modal').style.display = 'flex';
+    showAuthError('');
+}
+
+function closeAuthModal() {
+    document.getElementById('auth-modal').style.display = 'none';
+}
+
+function showAuthError(message) {
+    const el = document.getElementById('auth-error');
+    if (el) el.innerText = message || '';
+}
+
+function switchAuthMode(mode) {
+    authMode = mode;
+    const isLogin = mode === 'login';
+    document.getElementById('auth-tab-login').classList.toggle('active', isLogin);
+    document.getElementById('auth-tab-register').classList.toggle('active', !isLogin);
+    document.getElementById('auth-title').innerText = isLogin ? 'Masuk ke Akun' : 'Daftar Akun Baru';
+    document.getElementById('auth-subtitle').innerText = isLogin
+        ? 'Simpan template struk Anda ke database online.'
+        : 'Buat akun untuk menyimpan template struk secara online.';
+    document.getElementById('auth-submit').innerText = isLogin ? 'Masuk' : 'Daftar';
+    document.getElementById('auth-password').autocomplete = isLogin ? 'current-password' : 'new-password';
+    showAuthError('');
+}
+
+async function handleAuthSubmit(event) {
+    event.preventDefault();
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const btn = document.getElementById('auth-submit');
+
+    if (!sbClient) {
+        showAuthError('Supabase belum dikonfigurasi. Isi SUPABASE_URL dan SUPABASE_ANON_KEY di app.js.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = 'Memproses...';
+    showAuthError('');
+
+    try {
+        if (authMode === 'register') {
+            const { data, error } = await sbClient.auth.signUp({ email, password });
+            if (error) throw error;
+            if (data.user && !data.session) {
+                showAuthError('Pendaftaran berhasil. Cek email untuk verifikasi, lalu masuk.');
+                return;
+            }
+        } else {
+            const { error } = await sbClient.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+        }
+        closeAuthModal();
+    } catch (err) {
+        showAuthError(err.message || 'Terjadi kesalahan. Coba lagi.');
+    } finally {
+        btn.disabled = false;
+        btn.innerText = authMode === 'login' ? 'Masuk' : 'Daftar';
+    }
+}
+
+function updateAuthUI() {
+    const userBox = document.getElementById('auth-user-box');
+    const loginBtn = document.getElementById('btn-login');
+    const emailLabel = document.getElementById('auth-user-email');
+
+    if (currentUser) {
+        userBox.style.display = 'flex';
+        loginBtn.style.display = 'none';
+        emailLabel.innerText = currentUser.email || 'Akun';
+    } else {
+        userBox.style.display = 'none';
+        loginBtn.style.display = 'inline-flex';
+        emailLabel.innerText = '';
+    }
+}
+
+async function initAuth() {
+    if (!initSupabase()) {
+        updateAuthUI();
+        await renderHistoryList();
+        return;
+    }
+
+    const { data } = await sbClient.auth.getSession();
+    currentUser = data.session ? data.session.user : null;
+    updateAuthUI();
+    await renderHistoryList();
+
+    sbClient.auth.onAuthStateChange((_event, session) => {
+        currentUser = session ? session.user : null;
+        updateAuthUI();
+        renderHistoryList();
+    });
+}
+
+async function logout() {
+    if (sbClient) {
+        await sbClient.auth.signOut();
+    }
+    currentUser = null;
+    updateAuthUI();
+    await renderHistoryList();
+}
+
+// ==========================================
+// HISTORY / RIWAYAT FUNCTIONS (ONLINE)
+// ==========================================
 
 function collectFormState() {
     const ids = [
@@ -1408,57 +1544,107 @@ function applyFormState(state) {
     updatePreview();
 }
 
-function saveHistory() {
+async function saveHistory() {
     const nameInput = document.getElementById('input-history-name');
     const name = nameInput.value.trim();
-    if (!name) { nameInput.focus(); return; }
-    const state = collectFormState();
-    const entry = {
-        id: Date.now().toString(),
-        name: name,
-        date: new Date().toLocaleString('id-ID'),
-        state: state
-    };
-    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-    history.unshift(entry);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-    nameInput.value = '';
-    renderHistoryList();
-}
 
-function deleteHistory(id) {
-    let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-    history = history.filter(e => e.id !== id);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-    renderHistoryList();
-}
-
-function useHistory(id) {
-    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-    const entry = history.find(e => e.id === id);
-    if (entry) applyFormState(entry.state);
-}
-
-function renderHistoryList() {
-    const container = document.getElementById('history-list');
-    if (!container) return;
-    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-    if (history.length === 0) {
-        container.innerHTML = '<div class="history-empty">Belum ada riwayat tersimpan</div>';
+    if (!currentUser) {
+        openAuthModal();
         return;
     }
-    container.innerHTML = history.map(e => `
+    if (!sbClient) {
+        alert('Supabase belum dikonfigurasi. Isi SUPABASE_URL dan SUPABASE_ANON_KEY di app.js.');
+        return;
+    }
+    if (!name) { nameInput.focus(); return; }
+
+    const state = collectFormState();
+    const { error } = await sbClient.from(TEMPLATES_TABLE).insert({
+        user_id: currentUser.id,
+        name: name,
+        state: state
+    });
+
+    if (error) {
+        alert('Gagal menyimpan template: ' + error.message);
+        return;
+    }
+
+    nameInput.value = '';
+    await renderHistoryList();
+}
+
+async function deleteHistory(id) {
+    if (!sbClient || !currentUser) return;
+    if (!confirm('Hapus template ini?')) return;
+
+    const { error } = await sbClient.from(TEMPLATES_TABLE).delete().eq('id', id);
+    if (error) {
+        alert('Gagal menghapus template: ' + error.message);
+        return;
+    }
+    await renderHistoryList();
+}
+
+async function useHistory(id) {
+    if (!sbClient || !currentUser) return;
+
+    const { data, error } = await sbClient
+        .from(TEMPLATES_TABLE)
+        .select('state')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        alert('Gagal memuat template: ' + error.message);
+        return;
+    }
+    applyFormState(data.state);
+}
+
+async function renderHistoryList() {
+    const container = document.getElementById('history-list');
+    if (!container) return;
+
+    if (!currentUser) {
+        container.innerHTML = '<div class="history-empty">Masuk untuk melihat template tersimpan</div>';
+        return;
+    }
+    if (!sbClient) {
+        container.innerHTML = '<div class="history-empty">Database belum dikonfigurasi</div>';
+        return;
+    }
+
+    container.innerHTML = '<div class="history-empty">Memuat...</div>';
+
+    const { data, error } = await sbClient
+        .from(TEMPLATES_TABLE)
+        .select('id,name,created_at')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        container.innerHTML = `<div class="history-empty">Gagal memuat: ${escHtml(error.message)}</div>`;
+        return;
+    }
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="history-empty">Belum ada template tersimpan</div>';
+        return;
+    }
+
+    container.innerHTML = data.map(e => {
+        const dateStr = e.created_at ? new Date(e.created_at).toLocaleString('id-ID') : '';
+        return `
         <div class="history-item">
             <div class="history-item-info">
                 <div class="history-item-name">${escHtml(e.name)}</div>
-                <div class="history-item-date">${escHtml(e.date)}</div>
+                <div class="history-item-date">${escHtml(dateStr)}</div>
             </div>
             <div class="history-item-actions">
                 <button class="btn btn-primary btn-sm" onclick="useHistory('${e.id}')">Gunakan</button>
                 <button class="btn btn-secondary btn-sm" onclick="deleteHistory('${e.id}')">Hapus</button>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 function escHtml(str) {
@@ -1516,5 +1702,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Start with Belanja Mode by default
     switchReceiptType('belanja');
     updatePreview();
-    renderHistoryList();
+
+    // Initialize Supabase auth and online template history
+    initAuth();
 });

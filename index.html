@@ -17,6 +17,13 @@
             <span class="logo-title">Generator Struk Thermal 80mm</span>
             <span class="badge">V2.0 PRO</span>
         </div>
+        <div class="header-actions">
+            <div id="auth-user-box" class="auth-user-box" style="display: none;">
+                <span id="auth-user-email" class="auth-user-email"></span>
+                <button class="btn btn-secondary btn-sm" onclick="logout()">Keluar</button>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btn-login" onclick="openAuthModal()">Masuk</button>
+        </div>
     </header>
 
     <!-- Main Workspace Grid -->
@@ -549,6 +556,37 @@ tidak dapat ditukar/dikembalikan</textarea>
         <p>&copy; 2026. Dashboard Cetak Thermal 80mm.</p>
     </footer>
 
+    <!-- Login / Register Modal -->
+    <div class="auth-modal no-print" id="auth-modal" style="display: none;">
+        <div class="auth-card">
+            <button class="auth-close" onclick="closeAuthModal()" title="Tutup">&times;</button>
+            <h2 id="auth-title">Masuk ke Akun</h2>
+            <p class="auth-subtitle" id="auth-subtitle">Simpan template struk Anda ke database online.</p>
+
+            <div class="auth-tabs">
+                <button class="btn btn-tab active" id="auth-tab-login" onclick="switchAuthMode('login')">Masuk</button>
+                <button class="btn btn-tab" id="auth-tab-register" onclick="switchAuthMode('register')">Daftar</button>
+            </div>
+
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                <div class="form-group">
+                    <label for="auth-email">Email</label>
+                    <input type="email" id="auth-email" placeholder="nama@email.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="auth-password">Password</label>
+                    <input type="password" id="auth-password" placeholder="Minimal 6 karakter" minlength="6" required autocomplete="current-password">
+                </div>
+                <div class="auth-error" id="auth-error"></div>
+                <button type="submit" class="btn btn-primary" id="auth-submit" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
+                    Masuk
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase client library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Load external application script -->
     <script src="app.js"></script>
 </body>

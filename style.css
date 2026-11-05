@@ -864,3 +864,102 @@ footer.app-footer {
     font-size: 0.7rem;
     padding: 0.25rem 0.6rem;
 }
+
+/* ==========================================
+   HEADER AUTH ACTIONS
+   ========================================== */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.auth-user-box {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.auth-user-email {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ==========================================
+   LOGIN / REGISTER MODAL
+   ========================================== */
+.auth-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.auth-card {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    background: linear-gradient(160deg, #111827, #0b0f19);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.auth-card h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0.35rem;
+}
+
+.auth-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+}
+
+.auth-close {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.75rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.2rem;
+}
+
+.auth-close:hover {
+    color: white;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.auth-card .form-group {
+    margin-bottom: 0.9rem;
+}
+
+.auth-error {
+    color: #f87171;
+    font-size: 0.78rem;
+    min-height: 1rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.3;
+}
